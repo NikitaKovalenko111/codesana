@@ -2,6 +2,7 @@ package scanner_workers
 
 import (
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	scanner_gitleaks "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/gitleaks"
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
 	scanner_init "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/init"
 	scanner_scan "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/scan"
@@ -15,12 +16,12 @@ type Workers struct {
 	ScanWorker   *scanner_scan.ScanWorker
 }
 
-func Init(cmd *scanner_parser.Command, opengrep *scanner_opengrep.OpengrepScanner) *Workers {
+func Init(cmd *scanner_parser.Command, opengrep *scanner_opengrep.OpengrepScanner, gitleaks *scanner_gitleaks.GitLeaksScanner) *Workers {
 	return &Workers{
 		command:      cmd,
 		InitWorker:   scanner_init.Init(cmd),
 		UpdateWorker: scanner_update.Init(cmd),
-		ScanWorker:   scanner_scan.Init(cmd, opengrep),
+		ScanWorker:   scanner_scan.Init(cmd, opengrep, gitleaks),
 	}
 }
 
