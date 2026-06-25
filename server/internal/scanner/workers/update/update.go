@@ -54,26 +54,12 @@ func (w *UpdateWorker) Run() {
 
 		switch goos {
 		case "linux", "darwin":
-			ext = ".tar.gz"
+			ext = ""
 		case "windows":
-			ext = ".zip"
+			ext = ".exe"
 		}
 
-		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/opengrep", cwd, toolsDir), ext)
-
-		if err != nil {
-			panic(err)
-		}
-
-		instDir := fmt.Sprintf("%s/%s/opengrep", cwd, toolsDir)
-
-		err = w.installFromArchive("opengrep", dst, instDir)
-
-		if err != nil {
-			panic(err)
-		}
-
-		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, toolsDir))
+		_, err = w.downloadFile(url, fmt.Sprintf("%s/%s/opengrep/opengrep", cwd, toolsDir), ext)
 
 		if err != nil {
 			panic(err)
@@ -239,15 +225,26 @@ func (w *UpdateWorker) buildDownloadURL(toolName string) (string, error) {
 		version = "1.23.0"
 		downloadURL = "https://github.com/opengrep/opengrep"
 
+		if goos == "linux" {
+			goos = "manylinux"
+			ext = ""
+		}
+
+		if goos == "darwin" {
+			goos = "osx"
+			ext = ""
+		}
+
 		if goos == "windows" {
 			arch = "x86"
+			ext = ".exe"
 		}
 
 		if arch == "arm64" {
 			arch = "aarch64"
 		}
 
-		return fmt.Sprintf("%s/releases/download/v%s/%s-core_%s_%s.%s",
+		return fmt.Sprintf("%s/releases/download/v%s/%s_%s_%s%s",
 			downloadURL, version, toolName, goos, arch, ext), nil
 	case "trivy":
 		version = "0.71.2"
