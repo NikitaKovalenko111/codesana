@@ -3,6 +3,7 @@ package scanner_gitleaks
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,13 +46,46 @@ func Init(wd string) *GitLeaksScanner {
 	}
 }
 
-func (s *GitLeaksScanner) Scan() *[]GitLeaksFinding {
+func (s *GitLeaksScanner) Scan(files []string) *[]GitLeaksFinding {
 	var result []GitLeaksFinding
 
 	wd, err := os.Getwd()
+	tmpDir := filepath.Join(wd, ".codesana", "gitleaks", "tmp")
 
 	if err != nil {
 		panic(err)
+	}
+
+	if len(files) > 0 {
+		err = os.MkdirAll(filepath.Join(wd, ".codesana", "gitleaks", "tmp"), 0o644)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, f := range files {
+			src := filepath.Join(wd, "..", f)
+
+			in, err := os.Open(src)
+			if err != nil {
+				panic(err)
+			}
+
+			out, err := os.Create(filepath.Join(tmpDir, filepath.Base(f)))
+			if err != nil {
+				panic(err)
+			}
+			if _, err := io.Copy(out, in); err != nil {
+				panic(err)
+			}
+
+			err = out.Sync()
+			if err != nil {
+				panic(err)
+			}
+
+			in.Close()
+			out.Close()
+		}
 	}
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
@@ -62,11 +96,19 @@ func (s *GitLeaksScanner) Scan() *[]GitLeaksFinding {
 		panic(err)
 	}
 
+	var src string
+
+	if len(files) > 0 {
+		src = tmpDir
+	} else {
+		src = wd
+	}
+
 	cmd := exec.Command(
 		s.Path,
 		"detect",
 		"--source",
-		wd,
+		src,
 		"--report-format",
 		"json",
 		"--report-path",
@@ -89,6 +131,13 @@ func (s *GitLeaksScanner) Scan() *[]GitLeaksFinding {
 
 	if err != nil {
 		panic(err)
+	}
+
+	if len(files) > 0 {
+		err := os.RemoveAll(tmpDir)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	return &result

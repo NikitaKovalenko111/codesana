@@ -65,7 +65,7 @@ func Init() *OpengrepScanner {
 	}
 }
 
-func (s *OpengrepScanner) Scan() *OpengrepScanResults {
+func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
 	var result OpengrepScanResults
 
 	wd, err := os.Getwd()
@@ -74,11 +74,22 @@ func (s *OpengrepScanner) Scan() *OpengrepScanResults {
 		panic(err)
 	}
 
-	cmd := exec.Command(
-		s.Path,
+	args := []string{
 		"scan",
 		"--json",
-		wd,
+	}
+
+	if len(files) == 0 {
+		args = append(args, wd)
+	} else {
+		for _, f := range files {
+			args = append(args, filepath.Join("..", f))
+		}
+	}
+
+	cmd := exec.Command(
+		s.Path,
+		args...,
 	)
 
 	data, err := cmd.Output()

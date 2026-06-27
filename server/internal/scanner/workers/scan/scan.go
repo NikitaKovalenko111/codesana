@@ -34,21 +34,21 @@ func Init(
 	}
 }
 
-func (w *ScanWorker) Run() {
+func (w *ScanWorker) Run(files []string) {
 	var opengrepReport *scanner_opengrep.OpengrepScanResults
 	var gitleaksReport *[]scanner_gitleaks.GitLeaksFinding
 	var trivyReport *scanner_trivy.TrivyReport
 
 	if w.config.UseOpengrep {
-		opengrepReport = w.opengrepScanner.Scan()
+		opengrepReport = w.opengrepScanner.Scan(files)
 	}
 
 	if w.config.UseGitLeaks {
-		gitleaksReport = w.gitleaksScanner.Scan()
+		gitleaksReport = w.gitleaksScanner.Scan(files)
 	}
 
 	if w.config.UseTrivy {
-		trivyReport = w.trivyScanner.Scan()
+		trivyReport = w.trivyScanner.Scan(files)
 	}
 
 	if opengrepReport != nil {

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -61,8 +62,12 @@ func Init(wd string) *TrivyScanner {
 	}
 }
 
-func (s *TrivyScanner) Scan() *TrivyReport {
+func (s *TrivyScanner) Scan(files []string) *TrivyReport {
 	var result TrivyReport
+
+	if !s.shouldRunTrivy(files) {
+		return nil
+	}
 
 	wd, err := os.Getwd()
 
@@ -106,4 +111,41 @@ func (s *TrivyScanner) Scan() *TrivyReport {
 	}
 
 	return &result
+}
+
+func (s *TrivyScanner) shouldRunTrivy(files []string) bool {
+	if len(files) == 0 {
+		return true
+	}
+
+	for _, file := range files {
+		base := filepath.Base(file)
+
+		switch base {
+		case "go.mod",
+			"go.sum",
+			"package.json",
+			"package-lock.json",
+			"yarn.lock",
+			"pnpm-lock.yaml",
+			"requirements.txt",
+			"Pipfile",
+			"Pipfile.lock",
+			"poetry.lock",
+			"Cargo.toml",
+			"Cargo.lock",
+			"composer.json",
+			"composer.lock",
+			"Gemfile",
+			"Gemfile.lock",
+			"Dockerfile":
+			return true
+		}
+
+		if strings.HasSuffix(file, ".tf") {
+			return true
+		}
+	}
+
+	return false
 }

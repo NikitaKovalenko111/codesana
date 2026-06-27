@@ -2,6 +2,8 @@ package scanner_workers
 
 import (
 	"fmt"
+	"os/exec"
+	"strings"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
@@ -54,7 +56,39 @@ func (w *Workers) Run() {
 			return
 		}
 
-		w.ScanWorker.Run()
+		files := make([]string, 0)
+
+		var hasDiffFlag bool = false
+
+		for _, fl := range w.command.Flags {
+			if fl == "--diff" {
+				hasDiffFlag = true
+				break
+			}
+		}
+
+		if hasDiffFlag {
+			out, err := exec.Command(
+				"git",
+				"diff",
+				"--cached",
+				"--name-only",
+				"--diff-filter=ACMR",
+			).Output()
+
+			if err != nil {
+				panic(err)
+			}
+
+			for _, line := range strings.Split(string(out), "\n") {
+				line = strings.TrimSpace(line)
+				if line != "" {
+					files = append(files, line)
+				}
+			}
+		}
+
+		w.ScanWorker.Run(files)
 	case "help":
 		w.HelpWorker.Run(w.command)
 	}
