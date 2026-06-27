@@ -124,8 +124,6 @@ func (w *UpdateWorker) Run() {
 
 		url, err := w.buildDownloadURL("gitleaks")
 
-		fmt.Print(url)
-
 		if err != nil {
 			fmt.Println("Ошибка установки gitleaks")
 
@@ -185,7 +183,7 @@ func (w *UpdateWorker) isToolInstalled(toolName string) bool {
 	exe, _ = filepath.EvalSymlinks(exe)
 	cwd := filepath.Dir(exe)
 
-	toolsDir := "toolst"
+	toolsDir := "utils"
 
 	switch toolName {
 	case "opengrep":

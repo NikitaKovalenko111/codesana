@@ -23,15 +23,15 @@ func Init(cmd *scanner_parser.Command) *InitWorker {
 func (w *InitWorker) Run() {
 	fmt.Println("Создание проекта...")
 
-	var useSemgrep bool
-	var useSemgrepAns string
-	fmt.Print("Использовать сканнер Semgrep? (Yes/No): ")
-	fmt.Scan(&useSemgrepAns)
+	var useOpengrep bool
+	var useOpengrepAns string
+	fmt.Print("Использовать сканнер Opengrep? (Yes/No): ")
+	fmt.Scan(&useOpengrepAns)
 
-	if useSemgrepAns == "Yes" {
-		useSemgrep = true
+	if useOpengrepAns == "Yes" {
+		useOpengrep = true
 	} else {
-		useSemgrep = false
+		useOpengrep = false
 	}
 
 	var useTrivy bool
@@ -58,7 +58,7 @@ func (w *InitWorker) Run() {
 
 	secretKey := uuid.New()
 
-	cfg := scanner_config.Init(secretKey.String(), useSemgrep, useTrivy, useGitLeaks)
+	cfg := scanner_config.Init(secretKey.String(), useOpengrep, useTrivy, useGitLeaks)
 
 	dirPath := w.command.WorkingDirectory + "/.codesana"
 	fileName := "config.json"

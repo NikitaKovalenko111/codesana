@@ -1,17 +1,46 @@
 package scanner_config
 
+import (
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+)
+
 type SConfig struct {
 	SecretKey   string
-	UseSemgrep  bool
+	UseOpengrep bool
 	UseTrivy    bool
 	UseGitLeaks bool
 }
 
-func Init(key string, useSemgrep bool, useTrivy bool, useGitLeaks bool) *SConfig {
+func Init(key string, useOpengrep bool, useTrivy bool, useGitLeaks bool) *SConfig {
 	return &SConfig{
 		SecretKey:   key,
-		UseSemgrep:  useSemgrep,
+		UseOpengrep: useOpengrep,
 		UseTrivy:    useTrivy,
 		UseGitLeaks: useGitLeaks,
 	}
+}
+
+func Parse(wd string) *SConfig {
+	var cfg SConfig
+
+	data, err := os.ReadFile(filepath.Join(wd, ".codesana", "config.json"))
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+
+		panic(err)
+	}
+
+	err = json.Unmarshal(data, &cfg)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return &cfg
 }

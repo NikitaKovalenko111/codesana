@@ -1,6 +1,9 @@
 package scanner_parser
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 type Command struct {
 	Action           string
@@ -10,9 +13,19 @@ type Command struct {
 }
 
 func Parse() *Command {
-	action := os.Args[1]
-	subject := os.Args[2]
-	flags := os.Args[3:]
+	var action, subject string
+	flags := make([]string, 10)
+
+	if len(os.Args) > 1 {
+		action = os.Args[1]
+
+		if len(os.Args) > 2 && !strings.Contains(os.Args[2], "--") {
+			subject = os.Args[2]
+			flags = os.Args[3:]
+		} else {
+			flags = os.Args[2:]
+		}
+	}
 
 	wd, err := os.Getwd()
 

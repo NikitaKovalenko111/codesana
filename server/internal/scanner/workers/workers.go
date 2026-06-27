@@ -1,9 +1,14 @@
 package scanner_workers
 
 import (
+	"fmt"
+
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
 	scanner_gitleaks "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/gitleaks"
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
+	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
+	scanner_help "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/help"
 	scanner_init "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/init"
 	scanner_scan "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/scan"
 	scanner_update "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/update"
@@ -11,17 +16,27 @@ import (
 
 type Workers struct {
 	command      *scanner_parser.Command
+	config       *scanner_config.SConfig
 	InitWorker   *scanner_init.InitWorker
 	UpdateWorker *scanner_update.UpdateWorker
 	ScanWorker   *scanner_scan.ScanWorker
+	HelpWorker   *scanner_help.HelpWorker
 }
 
-func Init(cmd *scanner_parser.Command, opengrep *scanner_opengrep.OpengrepScanner, gitleaks *scanner_gitleaks.GitLeaksScanner) *Workers {
+func Init(
+	cmd *scanner_parser.Command,
+	cfg *scanner_config.SConfig,
+	opengrep *scanner_opengrep.OpengrepScanner,
+	gitleaks *scanner_gitleaks.GitLeaksScanner,
+	trivy *scanner_trivy.TrivyScanner,
+) *Workers {
 	return &Workers{
 		command:      cmd,
+		config:       cfg,
 		InitWorker:   scanner_init.Init(cmd),
 		UpdateWorker: scanner_update.Init(cmd),
-		ScanWorker:   scanner_scan.Init(cmd, opengrep, gitleaks),
+		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy),
+		HelpWorker:   scanner_help.Init(),
 	}
 }
 
@@ -32,6 +47,15 @@ func (w *Workers) Run() {
 	case "update":
 		w.UpdateWorker.Run()
 	case "scan":
+		if w.config == nil {
+			fmt.Println("Проект не инициализирован...")
+			fmt.Println("Пропишите codesana init для инициализации")
+
+			return
+		}
+
 		w.ScanWorker.Run()
+	case "help":
+		w.HelpWorker.Run(w.command)
 	}
 }
