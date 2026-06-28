@@ -14,18 +14,24 @@ import (
 func main() {
 	command := scanner_parser.Parse()
 
-	wd, err := os.Getwd()
+	exec, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
 
+	wd, err := os.Getwd()
 	if err != nil {
 		panic(err)
 	}
 
 	cfg := scanner_config.Parse(wd)
 
-	opengrep := scanner_opengrep.Init()
-	gitleaks := scanner_gitleaks.Init(wd)
-	trivy := scanner_trivy.Init(wd)
+	opengrep := scanner_opengrep.Init(exec, wd)
+	gitleaks := scanner_gitleaks.Init(exec, wd)
+	trivy := scanner_trivy.Init(exec, wd)
 
-	workers := scanner_workers.Init(command, cfg, opengrep, gitleaks, trivy)
+	toolsDir := "utils"
+
+	workers := scanner_workers.Init(command, cfg, opengrep, gitleaks, trivy, exec, toolsDir)
 	workers.Run()
 }

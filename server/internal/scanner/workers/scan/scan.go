@@ -2,6 +2,7 @@ package scanner_scan
 
 import (
 	"fmt"
+	"os"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
@@ -39,6 +40,8 @@ func (w *ScanWorker) Run(files []string) {
 	var gitleaksReport *[]scanner_gitleaks.GitLeaksFinding
 	var trivyReport *scanner_trivy.TrivyReport
 
+	var vulns int = 0
+
 	if w.config.UseOpengrep {
 		opengrepReport = w.opengrepScanner.Scan(files)
 	}
@@ -62,6 +65,10 @@ func (w *ScanWorker) Run(files []string) {
 		}
 
 		for _, result := range opengrepReport.Results {
+			if result.Extra.Severity == "ERROR" {
+				vulns += 1
+			}
+
 			fmt.Printf("ID проверки: %s\n", result.CheckId)
 			fmt.Printf("Проверенный файл: %s\n", result.Path)
 			fmt.Printf("Сообщение: %s\n", result.Extra.Message)
@@ -93,6 +100,8 @@ func (w *ScanWorker) Run(files []string) {
 		}
 
 		for _, result := range *gitleaksReport {
+			vulns += 1
+
 			fmt.Printf("Уязвимость: %s\n", result.Finding)
 			fmt.Printf("Проверенный файл: %s\n", result.File)
 			fmt.Printf("Коммит: %s\n", result.Commit)
@@ -116,6 +125,10 @@ func (w *ScanWorker) Run(files []string) {
 			}
 
 			for idx, vuln := range result.Vulnerabilities {
+				if vuln.Severity == "CRITICAL" || vuln.Severity == "HIGH" {
+					vulns += 1
+				}
+
 				fmt.Printf("\t- Уязвимость %d:\n", idx+1)
 				fmt.Printf("\t\tНазвание: %s\n", vuln.Title)
 				fmt.Printf("\t\tПакет: %s\n", vuln.PkgName)
@@ -135,5 +148,11 @@ func (w *ScanWorker) Run(files []string) {
 		}
 
 		fmt.Print("\n")
+
+		if vulns > 0 {
+			os.Exit(1)
+		}
+
+		os.Exit(0)
 	}
 }

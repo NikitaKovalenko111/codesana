@@ -17,12 +17,16 @@ import (
 )
 
 type UpdateWorker struct {
-	command *scanner_parser.Command
+	command  *scanner_parser.Command
+	exec     string
+	toolsDir string
 }
 
-func Init(cmd *scanner_parser.Command) *UpdateWorker {
+func Init(cmd *scanner_parser.Command, exec, toolsDir string) *UpdateWorker {
 	return &UpdateWorker{
-		command: cmd,
+		command:  cmd,
+		exec:     exec,
+		toolsDir: toolsDir,
 	}
 }
 
@@ -31,23 +35,13 @@ func (w *UpdateWorker) Run() {
 		fmt.Println("Opengrep не установлен! Установка...")
 
 		url, err := w.buildDownloadURL("opengrep")
-
 		if err != nil {
 			fmt.Println("Ошибка установки opengrep")
 
 			return
 		}
 
-		exe, err := os.Getwd()
-
-		if err != nil {
-			panic(exe)
-		}
-
-		exe, _ = filepath.EvalSymlinks(exe)
-		cwd := filepath.Dir(exe)
-
-		toolsDir := "utils"
+		cwd := filepath.Dir(w.exec)
 
 		var ext string
 		goos := runtime.GOOS
@@ -59,8 +53,7 @@ func (w *UpdateWorker) Run() {
 			ext = ".exe"
 		}
 
-		_, err = w.downloadFile(url, fmt.Sprintf("%s/%s/opengrep/opengrep", cwd, toolsDir), ext)
-
+		_, err = w.downloadFile(url, fmt.Sprintf("%s/%s/opengrep/opengrep", cwd, w.toolsDir), ext)
 		if err != nil {
 			panic(err)
 		}
@@ -70,23 +63,13 @@ func (w *UpdateWorker) Run() {
 		fmt.Println("Trivy не установлен! Установка...")
 
 		url, err := w.buildDownloadURL("trivy")
-
 		if err != nil {
 			fmt.Println("Ошибка установки trivy")
 
 			return
 		}
 
-		exe, err := os.Getwd()
-
-		if err != nil {
-			panic(exe)
-		}
-
-		exe, _ = filepath.EvalSymlinks(exe)
-		cwd := filepath.Dir(exe)
-
-		toolsDir := "utils"
+		cwd := filepath.Dir(w.exec)
 
 		var ext string
 		goos := runtime.GOOS
@@ -98,22 +81,19 @@ func (w *UpdateWorker) Run() {
 			ext = ".zip"
 		}
 
-		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/trivy", cwd, toolsDir), ext)
-
+		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/trivy", cwd, w.toolsDir), ext)
 		if err != nil {
 			panic(err)
 		}
 
-		instDir := fmt.Sprintf("%s/%s/trivy", cwd, toolsDir)
+		instDir := fmt.Sprintf("%s/%s/trivy", cwd, w.toolsDir)
 
 		err = w.installFromArchive("trivy", dst, instDir)
-
 		if err != nil {
 			panic(err)
 		}
 
-		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, toolsDir))
-
+		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, w.toolsDir))
 		if err != nil {
 			panic(err)
 		}
@@ -123,23 +103,13 @@ func (w *UpdateWorker) Run() {
 		fmt.Println("Gitleaks не установлен! Установка...")
 
 		url, err := w.buildDownloadURL("gitleaks")
-
 		if err != nil {
 			fmt.Println("Ошибка установки gitleaks")
 
 			return
 		}
 
-		exe, err := os.Getwd()
-
-		if err != nil {
-			panic(exe)
-		}
-
-		exe, _ = filepath.EvalSymlinks(exe)
-		cwd := filepath.Dir(exe)
-
-		toolsDir := "utils"
+		cwd := filepath.Dir(w.exec)
 
 		var ext string
 		goos := runtime.GOOS
@@ -151,22 +121,19 @@ func (w *UpdateWorker) Run() {
 			ext = ".zip"
 		}
 
-		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/gitleaks", cwd, toolsDir), ext)
-
+		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/gitleaks", cwd, w.toolsDir), ext)
 		if err != nil {
 			panic(err)
 		}
 
-		instDir := fmt.Sprintf("%s/%s/gitleaks", cwd, toolsDir)
+		instDir := fmt.Sprintf("%s/%s/gitleaks", cwd, w.toolsDir)
 
 		err = w.installFromArchive("gitleaks", dst, instDir)
-
 		if err != nil {
 			panic(err)
 		}
 
-		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, toolsDir))
-
+		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, w.toolsDir))
 		if err != nil {
 			panic(err)
 		}
@@ -174,28 +141,19 @@ func (w *UpdateWorker) Run() {
 }
 
 func (w *UpdateWorker) isToolInstalled(toolName string) bool {
-	exe, err := os.Getwd()
-
-	if err != nil {
-		panic("couldn't find executable file")
-	}
-
-	exe, _ = filepath.EvalSymlinks(exe)
-	cwd := filepath.Dir(exe)
-
-	toolsDir := "utils"
+	cwd := filepath.Dir(w.exec)
 
 	switch toolName {
 	case "opengrep":
-		if _, err := os.Stat(fmt.Sprintf("%s/%s/opengrep", cwd, toolsDir)); os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("%s/%s/opengrep", cwd, w.toolsDir)); os.IsNotExist(err) {
 			return false
 		}
 	case "trivy":
-		if _, err := os.Stat(fmt.Sprintf("%s/%s/trivy", cwd, toolsDir)); os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("%s/%s/trivy", cwd, w.toolsDir)); os.IsNotExist(err) {
 			return false
 		}
 	case "gitleaks":
-		if _, err := os.Stat(fmt.Sprintf("%s/%s/gitleaks", cwd, toolsDir)); os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("%s/%s/gitleaks", cwd, w.toolsDir)); os.IsNotExist(err) {
 			return false
 		}
 	}
@@ -283,7 +241,6 @@ func (w *UpdateWorker) downloadFile(url, dst, ext string) (string, error) {
 	fulldst := dst + ext
 
 	resp, err := grab.Get(fulldst, url)
-
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}

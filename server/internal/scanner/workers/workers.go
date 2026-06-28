@@ -31,12 +31,14 @@ func Init(
 	opengrep *scanner_opengrep.OpengrepScanner,
 	gitleaks *scanner_gitleaks.GitLeaksScanner,
 	trivy *scanner_trivy.TrivyScanner,
+	exec string,
+	toolsDir string,
 ) *Workers {
 	return &Workers{
 		command:      cmd,
 		config:       cfg,
 		InitWorker:   scanner_init.Init(cmd),
-		UpdateWorker: scanner_update.Init(cmd),
+		UpdateWorker: scanner_update.Init(cmd, exec, toolsDir),
 		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy),
 		HelpWorker:   scanner_help.Init(),
 	}

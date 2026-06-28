@@ -24,10 +24,11 @@ type GitLeaksFinding struct {
 }
 
 type GitLeaksScanner struct {
-	Path string
+	exec string
+	wd   string
 }
 
-func Init(wd string) *GitLeaksScanner {
+func Init(exec, wd string) *GitLeaksScanner {
 	goos := runtime.GOOS
 
 	var ext string
@@ -39,31 +40,27 @@ func Init(wd string) *GitLeaksScanner {
 		ext = ""
 	}
 
-	execPath := filepath.Join(filepath.Dir(wd), "utils", "gitleaks", "gitleaks"+ext)
+	execPath := filepath.Join(filepath.Dir(exec), "utils", "gitleaks", "gitleaks"+ext)
 
 	return &GitLeaksScanner{
-		Path: execPath,
+		exec: execPath,
+		wd:   wd,
 	}
 }
 
 func (s *GitLeaksScanner) Scan(files []string) *[]GitLeaksFinding {
 	var result []GitLeaksFinding
 
-	wd, err := os.Getwd()
-	tmpDir := filepath.Join(wd, ".codesana", "gitleaks", "tmp")
-
-	if err != nil {
-		panic(err)
-	}
+	tmpDir := filepath.Join(s.wd, ".codesana", "gitleaks", "tmp")
 
 	if len(files) > 0 {
-		err = os.MkdirAll(filepath.Join(wd, ".codesana", "gitleaks", "tmp"), 0o644)
+		err := os.MkdirAll(filepath.Join(s.wd, ".codesana", "gitleaks", "tmp"), 0o644)
 		if err != nil {
 			panic(err)
 		}
 
 		for _, f := range files {
-			src := filepath.Join(wd, "..", f)
+			src := filepath.Join(s.wd, f)
 
 			in, err := os.Open(src)
 			if err != nil {
@@ -90,7 +87,7 @@ func (s *GitLeaksScanner) Scan(files []string) *[]GitLeaksFinding {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(wd, ".codesana", "gitleaks", "results"), 0o644)
+	err := os.MkdirAll(filepath.Join(s.wd, ".codesana", "gitleaks", "results"), 0o644)
 
 	if err != nil {
 		panic(err)
@@ -101,18 +98,18 @@ func (s *GitLeaksScanner) Scan(files []string) *[]GitLeaksFinding {
 	if len(files) > 0 {
 		src = tmpDir
 	} else {
-		src = wd
+		src = s.wd
 	}
 
 	cmd := exec.Command(
-		s.Path,
+		s.exec,
 		"detect",
 		"--source",
 		src,
 		"--report-format",
 		"json",
 		"--report-path",
-		filepath.Join(wd, ".codesana", "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)),
+		filepath.Join(s.wd, ".codesana", "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)),
 	)
 
 	err = cmd.Run()
@@ -121,7 +118,7 @@ func (s *GitLeaksScanner) Scan(files []string) *[]GitLeaksFinding {
 		panic(err)
 	}
 
-	data, err := os.ReadFile(filepath.Join(wd, ".codesana", "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)))
+	data, err := os.ReadFile(filepath.Join(s.wd, ".codesana", "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)))
 
 	if err != nil {
 		panic(err)

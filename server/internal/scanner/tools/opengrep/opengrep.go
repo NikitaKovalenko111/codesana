@@ -37,16 +37,11 @@ type OpengrepScanExtraInfo struct {
 }
 
 type OpengrepScanner struct {
-	Path string
+	exec string
+	wd   string
 }
 
-func Init() *OpengrepScanner {
-	mainExe, err := os.Getwd()
-
-	if err != nil {
-		panic(err)
-	}
-
+func Init(exec, wd string) *OpengrepScanner {
 	goos := runtime.GOOS
 
 	var ext string
@@ -58,21 +53,16 @@ func Init() *OpengrepScanner {
 		ext = ""
 	}
 
-	opengrepExec := filepath.Join(filepath.Dir(mainExe), "utils", "opengrep", "opengrep"+ext)
+	opengrepExec := filepath.Join(filepath.Dir(exec), "utils", "opengrep", "opengrep"+ext)
 
 	return &OpengrepScanner{
-		Path: opengrepExec,
+		exec: opengrepExec,
+		wd:   wd,
 	}
 }
 
 func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
 	var result OpengrepScanResults
-
-	wd, err := os.Getwd()
-
-	if err != nil {
-		panic(err)
-	}
 
 	args := []string{
 		"scan",
@@ -80,15 +70,13 @@ func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
 	}
 
 	if len(files) == 0 {
-		args = append(args, wd)
+		args = append(args, s.wd)
 	} else {
-		for _, f := range files {
-			args = append(args, filepath.Join("..", f))
-		}
+		args = append(args, files...)
 	}
 
 	cmd := exec.Command(
-		s.Path,
+		s.exec,
 		args...,
 	)
 
@@ -106,13 +94,13 @@ func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(wd, ".codesana", "opengrep", "results"), 0o644)
+	err = os.MkdirAll(filepath.Join(s.wd, ".codesana", "opengrep", "results"), 0o644)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(wd, ".codesana", "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0o644)
+	err = os.WriteFile(filepath.Join(s.wd, ".codesana", "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0o644)
 	if err != nil {
 		panic(err)
 	}
