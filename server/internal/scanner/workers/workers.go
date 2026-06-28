@@ -11,6 +11,7 @@ import (
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
 	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
 	scanner_help "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/help"
+	scanner_hooks "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/hooks"
 	scanner_init "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/init"
 	scanner_scan "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/scan"
 	scanner_update "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/update"
@@ -23,6 +24,7 @@ type Workers struct {
 	UpdateWorker *scanner_update.UpdateWorker
 	ScanWorker   *scanner_scan.ScanWorker
 	HelpWorker   *scanner_help.HelpWorker
+	HooksWorker  *scanner_hooks.HooksWorker
 }
 
 func Init(
@@ -32,6 +34,7 @@ func Init(
 	gitleaks *scanner_gitleaks.GitLeaksScanner,
 	trivy *scanner_trivy.TrivyScanner,
 	exec string,
+	wd string,
 	toolsDir string,
 ) *Workers {
 	return &Workers{
@@ -41,6 +44,7 @@ func Init(
 		UpdateWorker: scanner_update.Init(cmd, exec, toolsDir),
 		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy),
 		HelpWorker:   scanner_help.Init(),
+		HooksWorker:  scanner_hooks.Init(cmd, wd),
 	}
 }
 
@@ -50,6 +54,14 @@ func (w *Workers) Run() {
 		w.InitWorker.Run()
 	case "update":
 		w.UpdateWorker.Run()
+	case "hooks":
+		if w.command.Subject == "install" {
+			w.HooksWorker.Install()
+		}
+
+		if w.command.Subject == "remove" {
+			w.HooksWorker.Remove()
+		}
 	case "scan":
 		if w.config == nil {
 			fmt.Println("Проект не инициализирован...")

@@ -32,6 +32,6 @@ func main() {
 
 	toolsDir := "utils"
 
-	workers := scanner_workers.Init(command, cfg, opengrep, gitleaks, trivy, exec, toolsDir)
+	workers := scanner_workers.Init(command, cfg, opengrep, gitleaks, trivy, exec, wd, toolsDir)
 	workers.Run()
 }
