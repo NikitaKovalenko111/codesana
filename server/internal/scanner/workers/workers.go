@@ -12,6 +12,7 @@ import (
 	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
 	scanner_help "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/help"
 	scanner_hooks "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/hooks"
+	scanner_ignore "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/ignore"
 	scanner_init "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/init"
 	scanner_scan "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/scan"
 	scanner_update "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/update"
@@ -25,6 +26,7 @@ type Workers struct {
 	ScanWorker   *scanner_scan.ScanWorker
 	HelpWorker   *scanner_help.HelpWorker
 	HooksWorker  *scanner_hooks.HooksWorker
+	IgnoreWorker *scanner_ignore.IgnoreWorker
 }
 
 func Init(
@@ -37,14 +39,17 @@ func Init(
 	wd string,
 	toolsDir string,
 ) *Workers {
+	scannerIgnore := scanner_ignore.Init(wd, cmd)
+
 	return &Workers{
 		command:      cmd,
 		config:       cfg,
 		InitWorker:   scanner_init.Init(cmd),
 		UpdateWorker: scanner_update.Init(cmd, exec, toolsDir),
-		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy),
+		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy, scannerIgnore.IgnoreMap),
 		HelpWorker:   scanner_help.Init(),
 		HooksWorker:  scanner_hooks.Init(cmd, wd),
+		IgnoreWorker: scannerIgnore,
 	}
 }
 
@@ -75,7 +80,7 @@ func (w *Workers) Run() {
 		var hasDiffFlag bool = false
 
 		for _, fl := range w.command.Flags {
-			if fl == "--diff" {
+			if fl.FlagName == "--diff" {
 				hasDiffFlag = true
 				break
 			}
@@ -105,5 +110,7 @@ func (w *Workers) Run() {
 		w.ScanWorker.Run(files)
 	case "help":
 		w.HelpWorker.Run(w.command)
+	case "ignore":
+		w.IgnoreWorker.Run()
 	}
 }

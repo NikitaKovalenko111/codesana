@@ -1,4 +1,4 @@
-package codesana
+package main
 
 import scanner "github.com/NikitaKovalenko111/codesana/internal/scanner"
 
