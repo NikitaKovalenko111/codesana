@@ -1,4 +1,4 @@
-package main
+package scanner
 
 import (
 	"os"
@@ -11,7 +11,7 @@ import (
 	scanner_workers "github.com/NikitaKovalenko111/codesana/internal/scanner/workers"
 )
 
-func main() {
+func Run() {
 	command := scanner_parser.Parse()
 
 	exec, err := os.Executable()
