@@ -93,7 +93,7 @@ func Init() *HelpWorker {
 				},
 			},
 			"help": {
-				Action:  "help",
+				Action:  "hel",
 				Desc:    "Выводит мануал по командам",
 				Usecase: "codesana help <command>",
 				Subjects: []CommandSubject{

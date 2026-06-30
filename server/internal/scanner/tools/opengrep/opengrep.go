@@ -74,7 +74,9 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 	if len(files) == 0 {
 		args = append(args, filepath.Join(s.wd, path))
 	} else {
-		args = append(args, files...)
+		for _, f := range files {
+			args = append(args, filepath.Join(s.codesanaWD, "..", f))
+		}
 	}
 
 	cmd := exec.Command(
