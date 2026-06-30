@@ -37,11 +37,12 @@ type OpengrepScanExtraInfo struct {
 }
 
 type OpengrepScanner struct {
-	exec string
-	wd   string
+	exec       string
+	wd         string
+	codesanaWD string
 }
 
-func Init(exec, wd string) *OpengrepScanner {
+func Init(exec, wd, codesanaWD string) *OpengrepScanner {
 	goos := runtime.GOOS
 
 	var ext string
@@ -56,8 +57,9 @@ func Init(exec, wd string) *OpengrepScanner {
 	opengrepExec := filepath.Join(filepath.Dir(exec), "utils", "opengrep", "opengrep"+ext)
 
 	return &OpengrepScanner{
-		exec: opengrepExec,
-		wd:   wd,
+		exec:       opengrepExec,
+		wd:         wd,
+		codesanaWD: codesanaWD,
 	}
 }
 
@@ -94,13 +96,13 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(s.wd, ".codesana", "opengrep", "results"), 0o644)
+	err = os.MkdirAll(filepath.Join(s.codesanaWD, "opengrep", "results"), 0o644)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(s.wd, ".codesana", "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0o644)
+	err = os.WriteFile(filepath.Join(s.codesanaWD, "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0o644)
 	if err != nil {
 		panic(err)
 	}

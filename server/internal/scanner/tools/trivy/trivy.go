@@ -40,11 +40,12 @@ type TrivyReportVulnerability struct {
 }
 
 type TrivyScanner struct {
-	exec string
-	wd   string
+	exec       string
+	wd         string
+	codesanaWD string
 }
 
-func Init(exec, wd string) *TrivyScanner {
+func Init(exec, wd, codesanaWD string) *TrivyScanner {
 	goos := runtime.GOOS
 
 	var ext string
@@ -59,8 +60,9 @@ func Init(exec, wd string) *TrivyScanner {
 	execPath := filepath.Join(filepath.Dir(exec), "utils", "trivy", "trivy"+ext)
 
 	return &TrivyScanner{
-		exec: execPath,
-		wd:   wd,
+		exec:       execPath,
+		wd:         wd,
+		codesanaWD: codesanaWD,
 	}
 }
 
@@ -95,13 +97,13 @@ func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(s.wd, ".codesana", "trivy", "results"), 0o644)
+	err = os.MkdirAll(filepath.Join(s.codesanaWD, "trivy", "results"), 0o644)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(s.wd, ".codesana", "trivy", "results", fmt.Sprintf("trivy-result-%s.json", now)), data, 0o644)
+	err = os.WriteFile(filepath.Join(s.codesanaWD, "trivy", "results", fmt.Sprintf("trivy-result-%s.json", now)), data, 0o644)
 	if err != nil {
 		panic(err)
 	}

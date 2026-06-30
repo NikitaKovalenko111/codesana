@@ -22,7 +22,7 @@ func Init(cmd *scanner_parser.Command, wd string) *HooksWorker {
 }
 
 func (w *HooksWorker) Install() {
-	err := os.Mkdir(filepath.Join(w.wd, ".git", "hooks"), 0644)
+	err := os.Mkdir(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks"), 0644)
 	if err != nil {
 		if !errors.Is(err, os.ErrExist) {
 			panic(err)
@@ -46,14 +46,14 @@ func (w *HooksWorker) Install() {
 	`,
 	))
 
-	err = os.WriteFile(filepath.Join(w.wd, ".git", "hooks", "pre-commit"), content, 0755)
+	err = os.WriteFile(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks", "pre-commit"), content, 0755)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (w *HooksWorker) Remove() {
-	err := os.Remove(filepath.Join(w.wd, ".git", "hooks", "pre-commit"))
+	err := os.Remove(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks", "pre-commit"))
 	if err != nil {
 		panic(err)
 	}

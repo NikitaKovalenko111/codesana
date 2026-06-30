@@ -26,7 +26,7 @@ func Init(key string, useOpengrep bool, useTrivy bool, useGitLeaks bool) *SConfi
 func Parse(wd string) *SConfig {
 	var cfg SConfig
 
-	data, err := os.ReadFile(filepath.Join(wd, ".codesana", "config.json"))
+	data, err := os.ReadFile(filepath.Join(wd, "config.json"))
 
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

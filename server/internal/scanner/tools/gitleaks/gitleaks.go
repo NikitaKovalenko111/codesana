@@ -21,11 +21,12 @@ type GitLeaksFinding struct {
 }
 
 type GitLeaksScanner struct {
-	exec string
-	wd   string
+	exec       string
+	wd         string
+	codesanaWD string
 }
 
-func Init(exec, wd string) *GitLeaksScanner {
+func Init(exec, wd, codesanaWD string) *GitLeaksScanner {
 	goos := runtime.GOOS
 
 	var ext string
@@ -40,24 +41,25 @@ func Init(exec, wd string) *GitLeaksScanner {
 	execPath := filepath.Join(filepath.Dir(exec), "utils", "gitleaks", "gitleaks"+ext)
 
 	return &GitLeaksScanner{
-		exec: execPath,
-		wd:   wd,
+		exec:       execPath,
+		wd:         wd,
+		codesanaWD: codesanaWD,
 	}
 }
 
 func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 	var result []GitLeaksFinding
 
-	tmpDir := filepath.Join(s.wd, ".codesana", "gitleaks", "tmp")
+	tmpDir := filepath.Join(s.codesanaWD, "gitleaks", "tmp")
 
 	if len(files) > 0 {
-		err := os.MkdirAll(filepath.Join(s.wd, ".codesana", "gitleaks", "tmp"), 0o644)
+		err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "tmp"), 0o644)
 		if err != nil {
 			panic(err)
 		}
 
 		for _, f := range files {
-			src := filepath.Join(s.wd, f)
+			src := filepath.Join(filepath.Join(s.codesanaWD, ".."), f)
 
 			in, err := os.Open(src)
 			if err != nil {
@@ -84,7 +86,7 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err := os.MkdirAll(filepath.Join(s.wd, ".codesana", "gitleaks", "results"), 0o644)
+	err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "results"), 0o644)
 
 	if err != nil {
 		panic(err)
@@ -108,8 +110,7 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 		"json",
 		"--report-path",
 		filepath.Join(
-			s.wd,
-			".codesana",
+			s.codesanaWD,
 			"gitleaks",
 			"results",
 			fmt.Sprintf("gitleaks-result-%s.json", now),
@@ -118,7 +119,7 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 
 	_ = cmd.Run()
 
-	data, err := os.ReadFile(filepath.Join(s.wd, ".codesana", "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)))
+	data, err := os.ReadFile(filepath.Join(s.codesanaWD, "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)))
 
 	if err != nil {
 		panic(err)

@@ -112,5 +112,11 @@ func (w *Workers) Run() {
 		w.HelpWorker.Run(w.command)
 	case "ignore":
 		w.IgnoreWorker.Run()
+	default:
+		fmt.Println()
+		fmt.Println("\x1b[31mНеизвестная команда\x1b[0m")
+		fmt.Println()
+		fmt.Println("👉 Введите: codesana help all")
+		fmt.Println()
 	}
 }

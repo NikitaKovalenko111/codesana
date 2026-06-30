@@ -33,13 +33,13 @@ func Init(wd string, cmd *scanner_parser.Command) *IgnoreWorker {
 			panic(err)
 		}
 
-		err = os.WriteFile(filepath.Join(wd, ".codesana", "ignore.json"), dataBytes, 0755)
+		err = os.WriteFile(filepath.Join(wd, "ignore.json"), dataBytes, 0755)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	data, err := os.ReadFile(filepath.Join(wd, ".codesana", "ignore.json"))
+	data, err := os.ReadFile(filepath.Join(wd, "ignore.json"))
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +65,7 @@ func Init(wd string, cmd *scanner_parser.Command) *IgnoreWorker {
 func (w *IgnoreWorker) Run() {
 	var ignoredData IgnoredFileJSON
 
-	data, err := os.ReadFile(filepath.Join(w.wd, ".codesana", "ignore.json"))
+	data, err := os.ReadFile(filepath.Join(w.wd, "ignore.json"))
 	if err != nil {
 		panic(err)
 	}
@@ -93,14 +93,14 @@ func (w *IgnoreWorker) Run() {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(w.wd, ".codesana", "ignore.json"), newData, 0755)
+	err = os.WriteFile(filepath.Join(w.wd, "ignore.json"), newData, 0755)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func isIgnoreFileExist(wd string) bool {
-	_, err := os.Lstat(filepath.Join(wd, ".codesana", "ignore.json"))
+	_, err := os.Lstat(filepath.Join(wd, "ignore.json"))
 
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
