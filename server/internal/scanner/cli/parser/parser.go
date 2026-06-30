@@ -36,7 +36,7 @@ func Parse() *Command {
 	i := 0
 	for i < len(flagsStr) {
 		switch flagsStr[i] {
-		case "--reason":
+		case "--reason", "--report":
 			if !(i+1 < len(flagsStr)) {
 				panic("wrong command")
 			}

@@ -46,7 +46,7 @@ func Init(
 		config:       cfg,
 		InitWorker:   scanner_init.Init(cmd),
 		UpdateWorker: scanner_update.Init(cmd, exec, toolsDir),
-		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy, scannerIgnore.IgnoreMap),
+		ScanWorker:   scanner_scan.Init(cmd, cfg, opengrep, gitleaks, trivy, scannerIgnore.IgnoreMap, wd),
 		HelpWorker:   scanner_help.Init(),
 		HooksWorker:  scanner_hooks.Init(cmd, wd),
 		IgnoreWorker: scannerIgnore,

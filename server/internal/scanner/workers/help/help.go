@@ -61,6 +61,11 @@ func Init() *HelpWorker {
 						Desc:    "Проводит сканирование для git diff (изменения в коммите)",
 						Usecase: "codesana scan --diff",
 					},
+					{
+						Flag:    "--report",
+						Desc:    "Создает отчет в папке .codesana/reports",
+						Usecase: "codesana scan <path> --report <format>",
+					},
 				},
 			},
 			"ignore": {
@@ -93,7 +98,7 @@ func Init() *HelpWorker {
 				},
 			},
 			"help": {
-				Action:  "hel",
+				Action:  "help",
 				Desc:    "Выводит мануал по командам",
 				Usecase: "codesana help <command>",
 				Subjects: []CommandSubject{

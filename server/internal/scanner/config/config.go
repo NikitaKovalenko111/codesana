@@ -8,11 +8,16 @@ import (
 )
 
 type SConfig struct {
-	SecretKey   string
-	UseOpengrep bool
-	UseTrivy    bool
-	UseGitLeaks bool
+	SecretKey   string `json:"SecretKey"`
+	UseOpengrep bool   `json:"UseOpengrep"`
+	UseTrivy    bool   `json:"UseTrivy"`
+	UseGitLeaks bool   `json:"UseGitLeaks"`
+	//HooksConfig HooksConfig `json:"Hooks"`
 }
+
+/*type HooksConfig struct {
+	BlockBelow string `json:"BlockBelow"`
+}*/
 
 func Init(key string, useOpengrep bool, useTrivy bool, useGitLeaks bool) *SConfig {
 	return &SConfig{
