@@ -36,7 +36,7 @@ func (w *UpdateWorker) Run() {
 
 		url, err := w.buildDownloadURL("opengrep")
 		if err != nil {
-			fmt.Println("Ошибка установки opengrep")
+			fmt.Println("\x1b[31mОшибка установки opengrep\x1b[0m")
 
 			return
 		}
@@ -57,6 +57,8 @@ func (w *UpdateWorker) Run() {
 		if err != nil {
 			panic(err)
 		}
+	} else {
+		fmt.Println("\x1b[32mOpengrep установлен\x1b[0m")
 	}
 
 	if !w.isToolInstalled("trivy") {
@@ -64,7 +66,7 @@ func (w *UpdateWorker) Run() {
 
 		url, err := w.buildDownloadURL("trivy")
 		if err != nil {
-			fmt.Println("Ошибка установки trivy")
+			fmt.Println("\x1b[31mОшибка установки trivy\x1b[0m")
 
 			return
 		}
@@ -97,6 +99,8 @@ func (w *UpdateWorker) Run() {
 		if err != nil {
 			panic(err)
 		}
+	} else {
+		fmt.Println("\x1b[32mTrivy установлен\x1b[0m")
 	}
 
 	if !w.isToolInstalled("gitleaks") {
@@ -104,7 +108,7 @@ func (w *UpdateWorker) Run() {
 
 		url, err := w.buildDownloadURL("gitleaks")
 		if err != nil {
-			fmt.Println("Ошибка установки gitleaks")
+			fmt.Println("\x1b[31mОшибка установки gitleaks\x1b[0m")
 
 			return
 		}
@@ -137,6 +141,8 @@ func (w *UpdateWorker) Run() {
 		if err != nil {
 			panic(err)
 		}
+	} else {
+		fmt.Println("\x1b[32mGitLeaks установлен\x1b[0m")
 	}
 }
 
@@ -245,21 +251,36 @@ func (w *UpdateWorker) downloadFile(url, dst, ext string) (string, error) {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(200 * time.Millisecond)
 	defer ticker.Stop()
+
+	done := resp.Done
 
 	for {
 		select {
 		case <-ticker.C:
+			progress := resp.Progress() * 100
+
+			if progress < 0 {
+				progress = 0
+			}
+			if progress > 100 {
+				progress = 100
+			}
+
 			fmt.Printf(
-				"%.2f%%\n",
-				100*resp.Progress(),
+				"\r%.2f%% (%d/%d MB)",
+				progress,
+				resp.BytesComplete()/1024/1024,
+				resp.Size()/1024/1024,
 			)
 
-		case <-resp.Done:
+		case <-done:
 			if err := resp.Err(); err != nil {
-				return "", err
+				return "", fmt.Errorf("download failed: %w", err)
 			}
+
+			fmt.Printf("\r100.00%% (done)\n")
 			return fulldst, nil
 		}
 	}

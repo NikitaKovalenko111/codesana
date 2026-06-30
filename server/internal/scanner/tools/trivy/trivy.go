@@ -64,7 +64,7 @@ func Init(exec, wd string) *TrivyScanner {
 	}
 }
 
-func (s *TrivyScanner) Scan(files []string) *TrivyReport {
+func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 	var result TrivyReport
 
 	if !s.shouldRunTrivy(files) {
@@ -78,7 +78,7 @@ func (s *TrivyScanner) Scan(files []string) *TrivyReport {
 		"vuln",
 		"--format",
 		"json",
-		s.wd,
+		filepath.Join(s.wd, path),
 	)
 
 	data, err := cmd.Output()

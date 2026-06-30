@@ -61,7 +61,7 @@ func Init(exec, wd string) *OpengrepScanner {
 	}
 }
 
-func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
+func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults {
 	var result OpengrepScanResults
 
 	args := []string{
@@ -70,7 +70,7 @@ func (s *OpengrepScanner) Scan(files []string) *OpengrepScanResults {
 	}
 
 	if len(files) == 0 {
-		args = append(args, s.wd)
+		args = append(args, filepath.Join(s.wd, path))
 	} else {
 		args = append(args, files...)
 	}
