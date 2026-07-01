@@ -27,6 +27,10 @@ type GitLeaksScanner struct {
 }
 
 func Init(exec, wd, codesanaWD string) *GitLeaksScanner {
+	if codesanaWD == "" {
+		return nil
+	}
+
 	goos := runtime.GOOS
 
 	var ext string

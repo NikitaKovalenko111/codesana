@@ -60,6 +60,11 @@ func (w *Workers) Run() {
 	case "update":
 		w.UpdateWorker.Run()
 	case "hooks":
+		if w.config == nil {
+			printToInit()
+			return
+		}
+
 		if w.command.Subject == "install" {
 			w.HooksWorker.Install()
 		}
@@ -69,9 +74,7 @@ func (w *Workers) Run() {
 		}
 	case "scan":
 		if w.config == nil {
-			fmt.Println("Проект не инициализирован...")
-			fmt.Println("Пропишите codesana init для инициализации")
-
+			printToInit()
 			return
 		}
 
@@ -111,6 +114,11 @@ func (w *Workers) Run() {
 	case "help":
 		w.HelpWorker.Run(w.command)
 	case "ignore":
+		if w.config == nil {
+			printToInit()
+			return
+		}
+
 		w.IgnoreWorker.Run()
 	default:
 		fmt.Println()
@@ -119,4 +127,9 @@ func (w *Workers) Run() {
 		fmt.Println("👉 Введите: codesana help all")
 		fmt.Println()
 	}
+}
+
+func printToInit() {
+	fmt.Println("Проект не инициализирован!")
+	fmt.Println("Пропишите codesana init")
 }

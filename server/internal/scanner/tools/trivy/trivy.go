@@ -46,6 +46,10 @@ type TrivyScanner struct {
 }
 
 func Init(exec, wd, codesanaWD string) *TrivyScanner {
+	if codesanaWD == "" {
+		return nil
+	}
+
 	goos := runtime.GOOS
 
 	var ext string

@@ -43,6 +43,10 @@ type OpengrepScanner struct {
 }
 
 func Init(exec, wd, codesanaWD string) *OpengrepScanner {
+	if codesanaWD == "" {
+		return nil
+	}
+
 	goos := runtime.GOOS
 
 	var ext string

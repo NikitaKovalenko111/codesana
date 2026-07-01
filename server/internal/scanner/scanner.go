@@ -26,9 +26,11 @@ func Run() {
 		panic(err)
 	}
 
-	codesanaWD, err := findCodesanaDir(wd)
+	var codesanaWD string
+
+	codesanaWD, err = findCodesanaDir(wd)
 	if err != nil {
-		panic(err)
+		codesanaWD = ""
 	}
 
 	cfg := scanner_config.Parse(codesanaWD)
