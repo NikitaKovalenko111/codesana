@@ -1,4 +1,4 @@
-# 🚀 Codesana v0.1
+# 🚀 Codesana v0.5
 
 Codesana — CLI-инструмент для статического анализа безопасности кода (SAST + SCA + secrets scanning) с поддержкой Git-интеграции, ignore-правил и генерации отчётов.
 
