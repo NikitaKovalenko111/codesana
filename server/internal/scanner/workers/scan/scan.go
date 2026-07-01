@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
@@ -57,6 +58,18 @@ func Init(
 }
 
 func (w *ScanWorker) Run(files []string) {
+	originalFiles := files
+	files = filterIgnoredScanFiles(files)
+
+	if len(originalFiles) > 0 && len(files) == 0 {
+		for _, fl := range w.command.Flags {
+			if fl.FlagName == "--diff" {
+				fmt.Print(color.GreenString("Изменения только в .codesana пропущены"))
+				return
+			}
+		}
+	}
+
 	var opengrepReport *scanner_opengrep.OpengrepScanResults
 	var gitleaksReport *[]scanner_gitleaks.GitLeaksFinding
 	var trivyReport *scanner_trivy.TrivyReport
@@ -309,6 +322,31 @@ func (w *ScanWorker) Run(files []string) {
 
 	fmt.Println("\n✅ Критичных уязвимостей не найдено")
 	os.Exit(0)
+}
+
+func filterIgnoredScanFiles(files []string) []string {
+	filtered := make([]string, 0, len(files))
+
+	for _, file := range files {
+		if pathContainsIgnoredSegment(file, ".codesana") {
+			continue
+		}
+
+		filtered = append(filtered, file)
+	}
+
+	return filtered
+}
+
+func pathContainsIgnoredSegment(path string, segment string) bool {
+	normalized := filepath.ToSlash(filepath.Clean(path))
+	for _, part := range strings.Split(normalized, "/") {
+		if part == segment {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (w *ScanWorker) makePDFReport(

@@ -86,6 +86,8 @@ func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 		"vuln",
 		"--format",
 		"json",
+		"--skip-dirs",
+		".codesana",
 		filepath.Join(s.wd, path),
 	)
 

@@ -81,6 +81,10 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 	}
 
 	if len(files) == 0 {
+		args = append(args, "--exclude", ".codesana/**")
+	}
+
+	if len(files) == 0 {
 		args = append(args, filepath.Join(s.wd, path))
 	} else {
 		for _, f := range files {
