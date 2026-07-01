@@ -10,6 +10,8 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type GitLeaksFinding struct {
@@ -59,7 +61,8 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 	if len(files) > 0 {
 		err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "tmp"), 0755)
 		if err != nil {
-			panic(err)
+			scanner_errors.Print("Не удалось подготовить временную папку gitleaks", err, "Сканирование секретов будет пропущено")
+			return nil
 		}
 
 		for _, f := range files {
@@ -67,20 +70,24 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 
 			in, err := os.Open(src)
 			if err != nil {
-				panic(err)
+				scanner_errors.Print("Не удалось открыть файл для gitleaks", err, "Сканирование секретов будет пропущено")
+				return nil
 			}
 
 			out, err := os.Create(filepath.Join(tmpDir, filepath.Base(f)))
 			if err != nil {
-				panic(err)
+				scanner_errors.Print("Не удалось создать временный файл для gitleaks", err, "Сканирование секретов будет пропущено")
+				return nil
 			}
 			if _, err := io.Copy(out, in); err != nil {
-				panic(err)
+				scanner_errors.Print("Не удалось скопировать файл для gitleaks", err, "Сканирование секретов будет пропущено")
+				return nil
 			}
 
 			err = out.Sync()
 			if err != nil {
-				panic(err)
+				scanner_errors.Print("Не удалось синхронизировать временный файл gitleaks", err, "Сканирование секретов будет пропущено")
+				return nil
 			}
 
 			in.Close()
@@ -93,7 +100,8 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 	err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "results"), 0755)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось создать папку результатов gitleaks", err, "Сканирование секретов будет пропущено")
+		return nil
 	}
 
 	var src string
@@ -126,19 +134,21 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 	data, err := os.ReadFile(filepath.Join(s.codesanaWD, "gitleaks", "results", fmt.Sprintf("gitleaks-result-%s.json", now)))
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось прочитать отчет gitleaks", err, "Сканирование секретов будет пропущено")
+		return nil
 	}
 
 	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось разобрать отчет gitleaks", err, "Сканирование секретов будет пропущено")
+		return nil
 	}
 
 	if len(files) > 0 {
 		err := os.RemoveAll(tmpDir)
 		if err != nil {
-			panic(err)
+			scanner_errors.Print("Не удалось удалить временную папку gitleaks", err, "Проверьте папку .codesana/gitleaks/tmp")
 		}
 	}
 

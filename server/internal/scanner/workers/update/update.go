@@ -13,7 +13,9 @@ import (
 	"time"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 	"github.com/cavaliergopher/grab/v3"
+	"github.com/fatih/color"
 )
 
 type UpdateWorker struct {
@@ -32,12 +34,12 @@ func Init(cmd *scanner_parser.Command, exec, toolsDir string) *UpdateWorker {
 
 func (w *UpdateWorker) Run() {
 	if !w.isToolInstalled("opengrep") {
-		fmt.Println("Opengrep не установлен! Установка...")
+		fmt.Println(color.YellowString("Opengrep не установлен! Установка..."))
 
 		url, err := w.buildDownloadURL("opengrep")
 
 		if err != nil {
-			fmt.Println("\x1b[31mОшибка установки opengrep\x1b[0m")
+			fmt.Println(color.RedString("Ошибка установки opengrep"))
 
 			return
 		}
@@ -56,18 +58,18 @@ func (w *UpdateWorker) Run() {
 
 		_, err = w.downloadFile(url, fmt.Sprintf("%s/%s/opengrep/opengrep", cwd, w.toolsDir), ext)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Ошибка установки opengrep", err, "Запустите codesana update еще раз")
 		}
 	} else {
-		fmt.Println("\x1b[32mOpengrep установлен\x1b[0m")
+		fmt.Println(color.GreenString("Opengrep установлен"))
 	}
 
 	if !w.isToolInstalled("trivy") {
-		fmt.Println("Trivy не установлен! Установка...")
+		fmt.Println(color.YellowString("Trivy не установлен! Установка..."))
 
 		url, err := w.buildDownloadURL("trivy")
 		if err != nil {
-			fmt.Println("\x1b[31mОшибка установки trivy\x1b[0m")
+			fmt.Println(color.RedString("Ошибка установки trivy"))
 
 			return
 		}
@@ -86,30 +88,30 @@ func (w *UpdateWorker) Run() {
 
 		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/trivy", cwd, w.toolsDir), ext)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Ошибка установки trivy", err, "Запустите codesana update еще раз")
 		}
 
 		instDir := fmt.Sprintf("%s/%s/trivy", cwd, w.toolsDir)
 
 		err = w.installFromArchive("trivy", dst, instDir)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Ошибка установки trivy", err, "Запустите codesana update еще раз")
 		}
 
 		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, w.toolsDir))
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Не удалось очистить временные файлы trivy", err, "Удалите каталог utils/temp вручную")
 		}
 	} else {
-		fmt.Println("\x1b[32mTrivy установлен\x1b[0m")
+		fmt.Println(color.GreenString("Trivy установлен"))
 	}
 
 	if !w.isToolInstalled("gitleaks") {
-		fmt.Println("Gitleaks не установлен! Установка...")
+		fmt.Println(color.YellowString("Gitleaks не установлен! Установка..."))
 
 		url, err := w.buildDownloadURL("gitleaks")
 		if err != nil {
-			fmt.Println("\x1b[31mОшибка установки gitleaks\x1b[0m")
+			fmt.Println(color.RedString("Ошибка установки gitleaks"))
 
 			return
 		}
@@ -128,22 +130,22 @@ func (w *UpdateWorker) Run() {
 
 		dst, err := w.downloadFile(url, fmt.Sprintf("%s/%s/temp/gitleaks", cwd, w.toolsDir), ext)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Ошибка установки gitleaks", err, "Запустите codesana update еще раз")
 		}
 
 		instDir := fmt.Sprintf("%s/%s/gitleaks", cwd, w.toolsDir)
 
 		err = w.installFromArchive("gitleaks", dst, instDir)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Ошибка установки gitleaks", err, "Запустите codesana update еще раз")
 		}
 
 		err = os.RemoveAll(fmt.Sprintf("%s/%s/temp", cwd, w.toolsDir))
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Не удалось очистить временные файлы gitleaks", err, "Удалите каталог utils/temp вручную")
 		}
 	} else {
-		fmt.Println("\x1b[32mGitLeaks установлен\x1b[0m")
+		fmt.Println(color.GreenString("GitLeaks установлен"))
 	}
 }
 
@@ -288,7 +290,7 @@ func (w *UpdateWorker) downloadFile(url, dst, ext string) (string, error) {
 			fmt.Printf("\r100.00%% (done)\n")
 			err = os.Chmod(fulldst, 0755)
 			if err != nil {
-				panic(err)
+				scanner_errors.Fatal("Не удалось сделать файл исполняемым", err, "Проверьте права доступа к каталогу utils")
 			}
 
 			return fulldst, nil

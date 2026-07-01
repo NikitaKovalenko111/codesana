@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	"github.com/fatih/color"
 )
 
 type HelpWorker struct {
@@ -29,12 +30,6 @@ type CommandManual struct {
 	Subjects []CommandSubject
 	Flags    []CommandFlag
 }
-
-var green string = "\033[32m"
-var cyan string = "\033[36m"
-var yellow string = "\033[33m"
-var reset string = "\033[0m"
-var bold string = "\033[1m"
 
 type Commands map[string]CommandManual
 
@@ -133,23 +128,23 @@ func (w *HelpWorker) Run(cmd *scanner_parser.Command) {
 }
 
 func printCommand(c CommandManual) {
-	fmt.Printf("%s%s%s %s\n", cyan, c.Action, reset, yellow+"(command)"+reset)
-	fmt.Printf("  %sОписание:%s %s\n", green, reset, c.Desc)
-	fmt.Printf("  %sИспользование:%s %s\n", green, reset, c.Usecase)
+	fmt.Printf("%s %s\n", color.CyanString(c.Action), color.YellowString("(command)"))
+	fmt.Printf("  %s %s\n", color.GreenString("Описание:"), c.Desc)
+	fmt.Printf("  %s %s\n", color.GreenString("Использование:"), c.Usecase)
 	if len(c.Flags) > 0 {
-		fmt.Printf("  %sФлаги:%s\n", green, reset)
+		fmt.Printf("  %s\n", color.GreenString("Флаги:"))
 
 		for _, f := range c.Flags {
-			fmt.Printf("    %s%s%s\n", cyan, f.Flag, reset)
+			fmt.Printf("    %s\n", color.CyanString(f.Flag))
 			fmt.Printf("      - Описание: %s\n", f.Desc)
 			fmt.Printf("      - Использование: %s\n", f.Usecase)
 		}
 	}
 	if len(c.Subjects) > 0 {
-		fmt.Printf("  %sДействия:%s\n", green, reset)
+		fmt.Printf("  %s\n", color.GreenString("Действия:"))
 
 		for _, s := range c.Subjects {
-			fmt.Printf("    %s%s%s\n", cyan, s.Subject, reset)
+			fmt.Printf("    %s\n", color.CyanString(s.Subject))
 			fmt.Printf("      - Описание: %s\n", s.Desc)
 			fmt.Printf("      - Использование: %s\n", s.Usecase)
 		}
@@ -162,7 +157,7 @@ func printCommand(c CommandManual) {
 func printHeader(title string) {
 	fmt.Println()
 	fmt.Println("══════════════════════════════════════════════")
-	fmt.Printf("%s%s%s\n", bold, title, reset)
+	fmt.Println(color.New(color.Bold).Sprint(title))
 	fmt.Println("══════════════════════════════════════════════")
 	fmt.Println()
 }

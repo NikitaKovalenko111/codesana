@@ -12,10 +12,12 @@ import (
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 	scanner_gitleaks "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/gitleaks"
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
 	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
 	scanner_ignore "github.com/NikitaKovalenko111/codesana/internal/scanner/workers/ignore"
+	"github.com/fatih/color"
 	"github.com/phpdave11/gofpdf"
 )
 
@@ -91,7 +93,7 @@ func (w *ScanWorker) Run(files []string) {
 
 			data, err := json.Marshal(hashData)
 			if err != nil {
-				panic(err)
+				scanner_errors.Fatal("Не удалось подготовить хеш уязвимости", err, "Повторите сканирование")
 			}
 
 			vulnHash := sha256.Sum256(data)
@@ -124,13 +126,13 @@ func (w *ScanWorker) Run(files []string) {
 				)
 			}
 			if result.Extra.Severity == "ERROR" {
-				fmt.Printf("Уровень опасности: \x1b[31m%s\x1b[0m\n", result.Extra.Severity)
+				fmt.Printf("Уровень опасности: %s\n", color.RedString(result.Extra.Severity))
 			}
 			if result.Extra.Severity == "WARNING" {
-				fmt.Printf("Уровень опасности: \x1b[33m%s\x1b[0m\n", result.Extra.Severity)
+				fmt.Printf("Уровень опасности: %s\n", color.YellowString(result.Extra.Severity))
 			}
 			if result.Extra.Severity == "INFO" {
-				fmt.Printf("Уровень опасности: \x1b[34m%s\x1b[0m\n", result.Extra.Severity)
+				fmt.Printf("Уровень опасности: %s\n", color.BlueString(result.Extra.Severity))
 			}
 			fmt.Printf("\n")
 
@@ -143,7 +145,7 @@ func (w *ScanWorker) Run(files []string) {
 		)
 
 		if unignoredCount == 0 {
-			fmt.Print("\x1b[32mУязвимости не найдены!\x1b[0m")
+			fmt.Print(color.GreenString("Уязвимости не найдены!"))
 		}
 
 		fmt.Print("\n")
@@ -165,7 +167,7 @@ func (w *ScanWorker) Run(files []string) {
 
 			data, err := json.Marshal(hashData)
 			if err != nil {
-				panic(err)
+				scanner_errors.Fatal("Не удалось подготовить хеш секрета", err, "Повторите сканирование")
 			}
 
 			vulnHash := sha256.Sum256(data)
@@ -194,7 +196,7 @@ func (w *ScanWorker) Run(files []string) {
 		)
 
 		if unignoredCount == 0 {
-			fmt.Print("\x1b[32mСекреты не найдены!\x1b[0m")
+			fmt.Print(color.GreenString("Секреты не найдены!"))
 		}
 
 		fmt.Print("\n")
@@ -219,7 +221,7 @@ func (w *ScanWorker) Run(files []string) {
 
 				data, err := json.Marshal(hashData)
 				if err != nil {
-					panic(err)
+					scanner_errors.Fatal("Не удалось подготовить хеш уязвимости", err, "Повторите сканирование")
 				}
 
 				vulnHash := sha256.Sum256(data)
@@ -250,20 +252,20 @@ func (w *ScanWorker) Run(files []string) {
 				}
 
 				if vuln.Severity == "CRITICAL" || vuln.Severity == "HIGH" {
-					fmt.Printf("\t\tУровень опасности: \x1b[31m%s\x1b[0m\n", vuln.Severity)
+					fmt.Printf("\t\tУровень опасности: %s\n", color.RedString(vuln.Severity))
 				}
 				if vuln.Severity == "MEDIUM" {
-					fmt.Printf("\t\tУровень опасности: \x1b[33m%s\x1b[0m\n", vuln.Severity)
+					fmt.Printf("\t\tУровень опасности: %s\n", color.YellowString(vuln.Severity))
 				}
 				if vuln.Severity == "LOW" || vuln.Severity == "UNKNOWN" {
-					fmt.Printf("\t\tУровень опасности: \x1b[34m%s\x1b[0m\n", vuln.Severity)
+					fmt.Printf("\t\tУровень опасности: %s\n", color.BlueString(vuln.Severity))
 				}
 
 				unignoredCount += 1
 			}
 
 			if unignoredCount == 0 {
-				fmt.Print("\x1b[32mУязвимости не найдены!\x1b[0m")
+				fmt.Print(color.GreenString("Уязвимости не найдены!"))
 			}
 		}
 	}
@@ -282,12 +284,12 @@ func (w *ScanWorker) Run(files []string) {
 	if hasReportFlag && reportFlag.FlagVal == "pdf" {
 		err := os.MkdirAll(filepath.Join(w.codesanawd, "reports"), 0755)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Не удалось создать папку reports", err, "Проверьте права доступа к .codesana")
 		}
 
 		err = w.makePDFReport(opengrepReport, gitleaksReport, trivyReport)
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Не удалось создать PDF-отчет", err, "Повторите команду scan --report pdf")
 		}
 	}
 
@@ -384,7 +386,7 @@ func (w *ScanWorker) makePDFReport(
 		0,
 	)
 
-	if len(opengrepRes.Results) > 0 {
+	if opengrepRes != nil && len(opengrepRes.Results) > 0 {
 		pdf.AddPage()
 
 		pdf.SetFont("Arial", "B", 18)
@@ -454,7 +456,7 @@ Fix:
 		}
 	}
 
-	if len(*gitleaksRes) > 0 {
+	if gitleaksRes != nil && len(*gitleaksRes) > 0 {
 		pdf.AddPage()
 
 		pdf.SetFont("Arial", "B", 18)
@@ -544,11 +546,13 @@ Secret:
 
 	trivyVulns := 0
 
-	for _, r := range trivyRes.Results {
-		trivyVulns += len(r.Vulnerabilities)
+	if trivyRes != nil {
+		for _, r := range trivyRes.Results {
+			trivyVulns += len(r.Vulnerabilities)
+		}
 	}
 
-	if trivyVulns > 0 {
+	if trivyRes != nil && trivyVulns > 0 {
 		pdf.AddPage()
 
 		pdf.SetFont("Arial", "B", 18)

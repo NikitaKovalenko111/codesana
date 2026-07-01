@@ -1,12 +1,12 @@
 package scanner_workers
 
 import (
-	"fmt"
 	"os/exec"
 	"strings"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 	scanner_gitleaks "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/gitleaks"
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
 	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
@@ -99,7 +99,7 @@ func (w *Workers) Run() {
 			).Output()
 
 			if err != nil {
-				panic(err)
+				scanner_errors.Fatal("Не удалось получить список изменённых файлов", err, "Проверьте, что вы находитесь внутри git-репозитория")
 			}
 
 			for _, line := range strings.Split(string(out), "\n") {
@@ -121,15 +121,10 @@ func (w *Workers) Run() {
 
 		w.IgnoreWorker.Run()
 	default:
-		fmt.Println()
-		fmt.Println("\x1b[31mНеизвестная команда\x1b[0m")
-		fmt.Println()
-		fmt.Println("👉 Введите: codesana help all")
-		fmt.Println()
+		scanner_errors.PrintUnknownCommand(w.command.Action)
 	}
 }
 
 func printToInit() {
-	fmt.Println("Проект не инициализирован!")
-	fmt.Println("Пропишите codesana init")
+	scanner_errors.PrintInitRequired()
 }

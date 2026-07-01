@@ -3,6 +3,8 @@ package scanner_parser
 import (
 	"os"
 	"strings"
+
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type CommandFlag struct {
@@ -38,7 +40,7 @@ func Parse() *Command {
 		switch flagsStr[i] {
 		case "--reason", "--report":
 			if !(i+1 < len(flagsStr)) {
-				panic("wrong command")
+				scanner_errors.Fatal("Некорректная команда", scanner_errors.ErrWrongCommand, "Флаг требует значение: --reason <text> или --report <format>")
 			}
 
 			flags = append(flags, CommandFlag{
@@ -60,7 +62,7 @@ func Parse() *Command {
 	wd, err := os.Getwd()
 
 	if err != nil {
-		panic("couldn't get current working directory")
+		scanner_errors.Fatal("Не удалось получить рабочую директорию", err, "Проверьте права доступа к папке проекта")
 	}
 
 	return &Command{

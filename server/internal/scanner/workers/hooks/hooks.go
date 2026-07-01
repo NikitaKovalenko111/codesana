@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type HooksWorker struct {
@@ -22,10 +23,10 @@ func Init(cmd *scanner_parser.Command, wd string) *HooksWorker {
 }
 
 func (w *HooksWorker) Install() {
-	err := os.Mkdir(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks"), 0644)
+	err := os.Mkdir(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks"), 0755)
 	if err != nil {
 		if !errors.Is(err, os.ErrExist) {
-			panic(err)
+			scanner_errors.Fatal("Не удалось создать git hooks directory", err, "Проверьте, что проект находится внутри git-репозитория")
 		}
 	}
 
@@ -48,13 +49,13 @@ func (w *HooksWorker) Install() {
 
 	err = os.WriteFile(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks", "pre-commit"), content, 0755)
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось записать pre-commit hook", err, "Проверьте права доступа к .git/hooks")
 	}
 }
 
 func (w *HooksWorker) Remove() {
 	err := os.Remove(filepath.Join(filepath.Join(w.wd, ".."), ".git", "hooks", "pre-commit"))
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось удалить pre-commit hook", err, "Проверьте, что хук существует и доступен для удаления")
 	}
 }

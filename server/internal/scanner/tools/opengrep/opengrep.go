@@ -1,14 +1,19 @@
 package scanner_opengrep
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"time"
+
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type OpengrepScanResults struct {
@@ -88,18 +93,32 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 		args...,
 	)
 
-	data, err := cmd.CombinedOutput()
+	data, err := cmd.Output()
 
 	if err != nil {
-		fmt.Printf("[WARNING] Opengrep failed: Connection timeout while downloading rules\n")
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) {
+			stderr := strings.TrimSpace(string(exitErr.Stderr))
+			if stderr != "" {
+				scanner_errors.Print("Opengrep не смог завершить сканирование", fmt.Errorf("%s", stderr), "Результат opengrep будет пропущен")
+			} else {
+				scanner_errors.Print("Opengrep не смог завершить сканирование", err, "Результат opengrep будет пропущен")
+			}
+		} else {
+			scanner_errors.Print("Opengrep не смог завершить сканирование", err, "Результат opengrep будет пропущен")
+		}
 
 		return nil
 	}
 
+	data = bytes.TrimSpace(data)
+	data = bytes.TrimPrefix(data, []byte{0xEF, 0xBB, 0xBF})
+
 	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось разобрать отчет opengrep", err, "Результат opengrep будет пропущен")
+		return nil
 	}
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
@@ -107,12 +126,14 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 	err = os.MkdirAll(filepath.Join(s.codesanaWD, "opengrep", "results"), 0755)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось создать папку результатов opengrep", err, "Результат opengrep будет пропущен")
+		return nil
 	}
 
 	err = os.WriteFile(filepath.Join(s.codesanaWD, "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0755)
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось сохранить отчет opengrep", err, "Результат opengrep будет пропущен")
+		return nil
 	}
 
 	return &result

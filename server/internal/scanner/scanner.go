@@ -7,6 +7,7 @@ import (
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 	scanner_gitleaks "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/gitleaks"
 	scanner_opengrep "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/opengrep"
 	scanner_trivy "github.com/NikitaKovalenko111/codesana/internal/scanner/tools/trivy"
@@ -18,12 +19,12 @@ func Run() {
 
 	exec, err := os.Executable()
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось определить путь к бинарнику", err, "Запустите приложение повторно")
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось получить рабочую директорию", err, "Запустите команду из папки проекта")
 	}
 
 	var codesanaWD string

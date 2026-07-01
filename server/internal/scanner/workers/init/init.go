@@ -7,6 +7,7 @@ import (
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
 	scanner_config "github.com/NikitaKovalenko111/codesana/internal/scanner/config"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 	"github.com/google/uuid"
 )
 
@@ -64,13 +65,13 @@ func (w *InitWorker) Run() {
 	fileName := "config.json"
 
 	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		panic("couldn't create project dir")
+		scanner_errors.Fatal("Не удалось создать папку .codesana", err, "Проверьте права доступа к рабочей директории")
 	}
 
 	f, err := os.Create(dirPath + "/" + fileName)
 
 	if err != nil {
-		panic("couldn't create config file")
+		scanner_errors.Fatal("Не удалось создать config.json", err, "Проверьте права доступа к рабочей директории")
 	}
 
 	defer f.Close()
@@ -79,7 +80,7 @@ func (w *InitWorker) Run() {
 	enc.SetIndent("", "  ")
 
 	if err := enc.Encode(cfg); err != nil {
-		panic("couldn't write config")
+		scanner_errors.Fatal("Не удалось записать config.json", err, "Проверьте права доступа к файлу .codesana/config.json")
 	}
 
 	fmt.Println("Проект успешно создан!")

@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type TrivyReport struct {
@@ -90,13 +92,15 @@ func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 	data, err := cmd.Output()
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Trivy не смог завершить сканирование", err, "Результат trivy будет пропущен")
+		return nil
 	}
 
 	err = json.Unmarshal(data, &result)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось разобрать отчет trivy", err, "Результат trivy будет пропущен")
+		return nil
 	}
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
@@ -104,12 +108,14 @@ func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 	err = os.MkdirAll(filepath.Join(s.codesanaWD, "trivy", "results"), 0755)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось создать папку результатов trivy", err, "Результат trivy будет пропущен")
+		return nil
 	}
 
 	err = os.WriteFile(filepath.Join(s.codesanaWD, "trivy", "results", fmt.Sprintf("trivy-result-%s.json", now)), data, 0755)
 	if err != nil {
-		panic(err)
+		scanner_errors.Print("Не удалось сохранить отчет trivy", err, "Результат trivy будет пропущен")
+		return nil
 	}
 
 	return &result

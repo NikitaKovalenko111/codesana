@@ -5,6 +5,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type SConfig struct {
@@ -42,13 +44,13 @@ func Parse(wd string) *SConfig {
 			return nil
 		}
 
-		panic(err)
+		scanner_errors.Fatal("Не удалось прочитать config.json", err, "Запустите codesana init заново")
 	}
 
 	err = json.Unmarshal(data, &cfg)
 
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Некорректный config.json", err, "Проверьте структуру файла .codesana/config.json")
 	}
 
 	return &cfg

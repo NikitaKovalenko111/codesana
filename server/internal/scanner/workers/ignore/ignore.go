@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	scanner_parser "github.com/NikitaKovalenko111/codesana/internal/scanner/cli/parser"
+	scanner_errors "github.com/NikitaKovalenko111/codesana/internal/scanner/errors"
 )
 
 type IgnoredVuln struct {
@@ -27,32 +28,36 @@ type IgnoreWorker struct {
 func Init(wd string, cmd *scanner_parser.Command) *IgnoreWorker {
 	var ignoredData IgnoredFileJSON
 
-	if !isIgnoreFileExist(wd) {
-		dataBytes, err := json.Marshal(ignoredData)
-		if err != nil {
-			panic(err)
+	if wd != "" {
+		if !isIgnoreFileExist(wd) {
+			dataBytes, err := json.Marshal(ignoredData)
+			if err != nil {
+				scanner_errors.Fatal("Не удалось создать ignore.json", err, "Проверьте права доступа к рабочей директории")
+			}
+
+			err = os.WriteFile(filepath.Join(wd, "ignore.json"), dataBytes, 0755)
+			if err != nil {
+				scanner_errors.Fatal("Не удалось записать ignore.json", err, "Проверьте права доступа к рабочей директории")
+			}
 		}
 
-		err = os.WriteFile(filepath.Join(wd, "ignore.json"), dataBytes, 0755)
+		data, err := os.ReadFile(filepath.Join(wd, "ignore.json"))
 		if err != nil {
-			panic(err)
+			scanner_errors.Fatal("Не удалось прочитать ignore.json", err, "Запустите codesana init заново")
 		}
-	}
 
-	data, err := os.ReadFile(filepath.Join(wd, "ignore.json"))
-	if err != nil {
-		panic(err)
-	}
-
-	err = json.Unmarshal(data, &ignoredData)
-	if err != nil {
-		panic(err)
+		err = json.Unmarshal(data, &ignoredData)
+		if err != nil {
+			scanner_errors.Fatal("Некорректный ignore.json", err, "Проверьте структуру файла .codesana/ignore.json")
+		}
 	}
 
 	var ignoredMap = make(map[string]IgnoredVuln)
 
-	for _, i := range ignoredData.Ignored {
-		ignoredMap[i.Fingerprint] = i
+	if wd != "" {
+		for _, i := range ignoredData.Ignored {
+			ignoredMap[i.Fingerprint] = i
+		}
 	}
 
 	return &IgnoreWorker{
@@ -67,12 +72,12 @@ func (w *IgnoreWorker) Run() {
 
 	data, err := os.ReadFile(filepath.Join(w.wd, "ignore.json"))
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось прочитать ignore.json", err, "Проверьте права доступа к файлу")
 	}
 
 	err = json.Unmarshal(data, &ignoredData)
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Некорректный ignore.json", err, "Проверьте структуру файла .codesana/ignore.json")
 	}
 
 	var msg string
@@ -90,12 +95,12 @@ func (w *IgnoreWorker) Run() {
 
 	newData, err := json.Marshal(ignoredData)
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось сформировать ignore.json", err, "Повторите команду ignore")
 	}
 
 	err = os.WriteFile(filepath.Join(w.wd, "ignore.json"), newData, 0755)
 	if err != nil {
-		panic(err)
+		scanner_errors.Fatal("Не удалось записать ignore.json", err, "Проверьте права доступа к файлу")
 	}
 }
 
@@ -107,7 +112,7 @@ func isIgnoreFileExist(wd string) bool {
 			return false
 		}
 
-		panic(err)
+		scanner_errors.Fatal("Не удалось проверить ignore.json", err, "Повторите команду позже")
 	}
 
 	return true
