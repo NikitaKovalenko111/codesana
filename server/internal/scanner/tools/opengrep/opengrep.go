@@ -88,10 +88,12 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 		args...,
 	)
 
-	data, err := cmd.Output()
+	data, err := cmd.CombinedOutput()
 
 	if err != nil {
-		panic(err)
+		fmt.Printf("[WARNING] Opengrep failed: Connection timeout while downloading rules\n")
+
+		return nil
 	}
 
 	err = json.Unmarshal(data, &result)
@@ -102,13 +104,13 @@ func (s *OpengrepScanner) Scan(files []string, path string) *OpengrepScanResults
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(s.codesanaWD, "opengrep", "results"), 0o644)
+	err = os.MkdirAll(filepath.Join(s.codesanaWD, "opengrep", "results"), 0755)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(s.codesanaWD, "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0o644)
+	err = os.WriteFile(filepath.Join(s.codesanaWD, "opengrep", "results", fmt.Sprintf("opengrep-result-%s.json", now)), data, 0755)
 	if err != nil {
 		panic(err)
 	}

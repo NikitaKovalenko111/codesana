@@ -101,13 +101,13 @@ func (s *TrivyScanner) Scan(files []string, path string) *TrivyReport {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err = os.MkdirAll(filepath.Join(s.codesanaWD, "trivy", "results"), 0o644)
+	err = os.MkdirAll(filepath.Join(s.codesanaWD, "trivy", "results"), 0755)
 
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.WriteFile(filepath.Join(s.codesanaWD, "trivy", "results", fmt.Sprintf("trivy-result-%s.json", now)), data, 0o644)
+	err = os.WriteFile(filepath.Join(s.codesanaWD, "trivy", "results", fmt.Sprintf("trivy-result-%s.json", now)), data, 0755)
 	if err != nil {
 		panic(err)
 	}

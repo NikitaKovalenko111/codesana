@@ -57,7 +57,7 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 	tmpDir := filepath.Join(s.codesanaWD, "gitleaks", "tmp")
 
 	if len(files) > 0 {
-		err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "tmp"), 0o644)
+		err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "tmp"), 0755)
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +90,7 @@ func (s *GitLeaksScanner) Scan(files []string, path string) *[]GitLeaksFinding {
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "results"), 0o644)
+	err := os.MkdirAll(filepath.Join(s.codesanaWD, "gitleaks", "results"), 0755)
 
 	if err != nil {
 		panic(err)

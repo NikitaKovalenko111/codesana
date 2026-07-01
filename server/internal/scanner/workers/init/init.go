@@ -63,7 +63,7 @@ func (w *InitWorker) Run() {
 	dirPath := w.command.WorkingDirectory + "/.codesana"
 	fileName := "config.json"
 
-	if err := os.MkdirAll(dirPath, 0o755); err != nil {
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
 		panic("couldn't create project dir")
 	}
 

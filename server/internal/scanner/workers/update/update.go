@@ -35,6 +35,7 @@ func (w *UpdateWorker) Run() {
 		fmt.Println("Opengrep не установлен! Установка...")
 
 		url, err := w.buildDownloadURL("opengrep")
+
 		if err != nil {
 			fmt.Println("\x1b[31mОшибка установки opengrep\x1b[0m")
 
@@ -206,6 +207,10 @@ func (w *UpdateWorker) buildDownloadURL(toolName string) (string, error) {
 			arch = "aarch64"
 		}
 
+		if arch == "amd64" {
+			arch = "x86"
+		}
+
 		return fmt.Sprintf("%s/releases/download/v%s/%s_%s_%s%s",
 			downloadURL, version, toolName, goos, arch, ext), nil
 	case "trivy":
@@ -281,6 +286,11 @@ func (w *UpdateWorker) downloadFile(url, dst, ext string) (string, error) {
 			}
 
 			fmt.Printf("\r100.00%% (done)\n")
+			err = os.Chmod(fulldst, 0755)
+			if err != nil {
+				panic(err)
+			}
+
 			return fulldst, nil
 		}
 	}
@@ -386,8 +396,13 @@ func (w *UpdateWorker) installFromTarGz(toolName, tarGzPath, installDir string) 
 			return errors.New("binary not found in tar.gz")
 		}
 
+		err = os.MkdirAll(installDir, 0755)
+		if err != nil {
+			return err
+		}
+
 		dst := filepath.Join(installDir, toolName)
-		return w.copyFileAndChmod(found, dst, 0o755)
+		return w.copyFileAndChmod(found, dst, 0755)
 	}
 
 	return errors.New("tar.gz not supported on this OS in this example")
