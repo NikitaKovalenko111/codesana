@@ -50,6 +50,22 @@ Codesana — CLI-инструмент для статического анали
 
 ---
 
+## Архитектура
+
+### C4 - Context
+
+![C4 Context](./server/assets/Codesana-C4-1.drawio.png)
+
+### C4 - Container
+
+![C4 Container](./server/assets/Codesana-C4-2.drawio.png)
+
+### C4 - Component
+
+![C4 Component](./server/assets/Codesana-C4-3.drawio.png)
+
+---
+
 ### ⚙️ CLI команды
 
 ```bash
